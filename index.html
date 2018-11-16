@@ -2,44 +2,67 @@
 <html>
 <head>
 	
-
+	<!-- Import leaflet  -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.3.4/dist/leaflet.css" integrity="sha512-puBpdR0798OZvTTbP4A8Ix/l+A4dHDD0DGqYW6RQ+9jxkRFclaxxQb/SJAWZfWAkuyeQUytO7+7N4QKrDh+drA==" crossorigin=""/>
-
-    <link rel="stylesheet" href="ancient_woods.css">
 
     <script src="https://unpkg.com/leaflet@1.3.4/dist/leaflet.js" integrity="sha512-nMMmRyTVoLYqjP9hrbed9S+FzjZHW5gY1TWCHA5ckwXZBadntCNs8kEqAWdrb9O7rxbCaA4lKTIWjDXZxflOcA==" crossorigin=""></script>
 
-	<script src="http://code.jquery.com/jquery-2.1.0.min.js"></script>
+    <!-- Import local stylesheet to set the map size -->
+    <link rel="stylesheet" href="ancient_woods.css">
 
-	
+    <!-- Import esri plugin -->
+	<script src="https://unpkg.com/esri-leaflet@2.2.3/dist/esri-leaflet.js"
+    integrity="sha512-YZ6b5bXRVwipfqul5krehD9qlbJzc6KOGXYsDjU9HHXW2gK57xmWl2gU6nAegiErAqFXhygKIsWPKbjLPXVb2g=="
+    crossorigin=""></script>
+
 </head>
 <body>
 
-
-
 <div id="mapid"></div>
+
 <script>
 
-	var mymap = L.map('mapid').setView([51.505, -0.09], 13);
+	// Set the map variable (wtih min zoom) and define the starting view
+	var mymap = L.map('mapid', {minZoom: 9}).setView([51.411203, -0.891541], 14);
 
-	L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw', {
-		maxZoom: 18,
-		id: 'mapbox.streets'
-	}).addTo(mymap);
+	// Add the Topographic esri basemap to the background
+	L.esri.basemapLayer("Topographic").addTo(mymap);
 
-	console.log('hello');
+	// Define a function to return different colours depending on the passed value
+	function getColour(d) {
+		if (d == 'Ancient & Semi-Natural Woodland') {
+			var colour =  'forestgreen'
+		} else if (d == 'Ancient Replanted Woodland') {
+			var colour = 'olive' 
+		}
+		return colour
+	}
 
-	$.getJSON("https://opendata.arcgis.com/datasets/45d3eebaebf847ac8c9f328091af5571_0.geojson", function(data) {
-		console.log(data);
-		//L.geoJson(data).addTo(mymap);
+	// Define a function which sets the style of a feature (using the getColour function)
+	function forest_style(feature) {
+    return {
+        fillColor: getColour(feature.properties.THEMNAME),
+        weight: 0.5,
+        color: getColour(feature.properties.THEMNAME),
+        fillOpacity: 0.7
+	    };
+	}
 
-	});
+	// Define a function to print our the THEMNAME in a popup when clicked
+	function polypopup(feature, layer) {
+		layer.bindPopup('<h4>'+feature.properties.THEMNAME+'</h4>');
+	}
+
+	// Using the esri plugin, plot data from the arcgis service into this map
+	var ancient_woods = L.esri.featureLayer({
+	  url: 'https://services.arcgis.com/JJzESW51TqeY9uat/arcgis/rest/services/Ancient_Woodlands_England/FeatureServer/0',
+	  style: forest_style,
+	  onEachFeature: polypopup,
+	},).addTo(mymap);
 
 
 
 </script>
-
-
 
 </body>
 </html>
